@@ -17,16 +17,15 @@ class Repositorio{
     arquivo.writeAsString(conteudoGravar);
   }
 
-  Future<List<Tarefa>> recuperarLista() async{
+  Future<List<dynamic>> recuperarLista() async{
     try{
       File arquivo = await _pegarArquivo();
-      List<Tarefa> tarefas =[];
+      List<dynamic> tarefas = [];
       String temp = await arquivo.readAsString();
-      print(temp);
-      return [];
-    }
+      tarefas = json.decode(temp);
+      return tarefas;
+        }
     catch(e){
-      print("passei pelo catch");
       print(e);
       return [];
     }

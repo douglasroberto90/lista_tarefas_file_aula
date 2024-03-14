@@ -1,9 +1,6 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:lista_tarefas_file_aula/models/tarefa.dart';
 import 'package:lista_tarefas_file_aula/repositories/repositorio.dart';
-
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -15,14 +12,29 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   TextEditingController controlerTarefa = TextEditingController();
 
-  Repositorio _repositorio=Repositorio();
+  Repositorio _repositorio = Repositorio();
   List<Tarefa> tarefas = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _repositorio.recuperarLista().then((dados) {
+      setState(() {
+        print(dados);
+        for (Map<String, dynamic> item in dados) {
+          Tarefa task =
+              Tarefa(titulo: item["titulo"], realizado: item["realizado"]);
+          tarefas.add(task);
+        }
+      });
+    });
+  }
 
   void _adicionarTarefa() {
     setState(() {
       Tarefa tarefa = Tarefa(titulo: controlerTarefa.text, realizado: false);
       tarefas.add(tarefa);
-      controlerTarefa.text='';
+      controlerTarefa.text = '';
       _repositorio.salvarLista(tarefas);
     });
   }
@@ -52,9 +64,9 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
           ),
-          Expanded(child: ListView.builder(
-              itemCount: tarefas.length,
-              itemBuilder: contruirListView))
+          Expanded(
+              child: ListView.builder(
+                  itemCount: tarefas.length, itemBuilder: contruirListView))
         ],
       ),
     );
@@ -62,28 +74,58 @@ class _HomePageState extends State<HomePage> {
 
   Widget contruirListView(BuildContext context, int index) {
     return Dismissible(
-        key: Key(DateTime.now().microsecondsSinceEpoch.toString()),
-        background: Container(
-          color: Colors.red,
-          child: Align(
-            alignment: Alignment(-0.9, 0.0),
-            child: Icon(
-              Icons.delete,
-              color: Colors.white,
-            ),
+      key: Key(DateTime.now().microsecondsSinceEpoch.toString()),
+      background: Container(
+        color: Colors.red,
+        child: Align(
+          alignment: Alignment(-0.9, 0.0),
+          child: Icon(
+            Icons.delete,
+            color: Colors.white,
           ),
         ),
+      ),
       direction: DismissDirection.startToEnd,
       child: CheckboxListTile(
-            title: Text(tarefas[index].titulo),
-            value: tarefas[index].realizado,
-            onChanged: (checked) {
-              tarefas[index].realizado = checked!;
-            },
-            ),
-    onDismissed: (direction){
-      tarefas.removeAt(index);
-    },
+        title: Text(tarefas[index].titulo),
+        value: tarefas[index].realizado,
+        secondary: CircleAvatar(
+          child: Icon(tarefas[index].realizado ? Icons.check : Icons.error),
+        ),
+        onChanged: (checked) {
+          setState(() {
+            tarefas[index].realizado = checked!;
+          });
+        },
+      ),
+      onDismissed: (direction) {
+        setState(() {
+          Tarefa tarefaRemovida = tarefas[index];
+          tarefas.removeAt(index);
+          _repositorio.salvarLista(tarefas);
+          int indiceTarefaRemovida =index;
+
+          final snack= SnackBar(
+            content: Text("Tarefa ${tarefaRemovida.titulo} removida"),
+            action: SnackBarAction(
+                label: "Desfazer", 
+                onPressed: (){
+                  setState(() {
+                    tarefas.insert(indiceTarefaRemovida, tarefaRemovida);
+                    _repositorio.salvarLista(tarefas);
+                  });
+                }),
+            duration: Duration(seconds: 3),
+          );
+
+          ScaffoldMessenger.of(context).removeCurrentSnackBar();
+          ScaffoldMessenger.of(context).showSnackBar(snack);
+        });
+
+
+
+
+      },
     );
   }
 }
