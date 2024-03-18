@@ -1,6 +1,8 @@
 # lista_tarefas_file_aula
 
-A new Flutter project.
+Projeto em flutter com uso da funcionalidade de salvar dados em arquivos no smartphone.
+O aplicatico é uma lista de tarefas.
+Toda vez que uma nova tarefa é adicionada, deletada ou alterada, o aplicativo salva um arquivo.json no smartphone com as tarefas atuais.
 
 ## Getting Started
 
